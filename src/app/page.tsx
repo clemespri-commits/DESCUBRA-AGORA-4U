@@ -1,269 +1,183 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, Sparkles, Film, Tv, Clock, TrendingUp } from 'lucide-react'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Sparkles, Film, Clock, TrendingUp, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MovieResult } from '@/lib/types'
+import { Card } from '@/components/ui/card'
+import { supabase } from '@/lib/supabase'
 
-export default function SearchInterface() {
-  const [query, setQuery] = useState('')
-  const [platform, setPlatform] = useState('all')
-  const [results, setResults] = useState<MovieResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [searched, setSearched] = useState(false)
+export default function HomePage() {
+  const router = useRouter()
 
-  const handleSearch = async () => {
-    if (!query.trim()) return
-
-    setLoading(true)
-    setSearched(true)
-
-    try {
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, platform }),
-      })
-
-      const data = await response.json()
-      setResults(data.results || [])
-    } catch (error) {
-      console.error('Erro na busca:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const exampleSearches = [
-    'filmes de ficção científica sobre batalhas espaciais',
-    'eastwood a proteger o presidente',
-    'comédia no Hawaii',
-    'série sobre crime e drogas'
-  ]
+  useEffect(() => {
+    // Verificar se já está autenticado
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        router.push('/dashboard')
+      }
+    })
+  }, [router])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
       {/* Header */}
       <header className="border-b border-white/10 bg-black/20 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg shadow-purple-500/50">
-              <Sparkles className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg shadow-purple-500/50">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Descubra Agora 4U</h1>
+                <p className="text-sm text-purple-300">Encontre seu próximo conteúdo favorito</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Descubra Agora 4U</h1>
-              <p className="text-sm text-purple-300">Encontre seu próximo conteúdo favorito</p>
-            </div>
+            <Button
+              onClick={() => router.push('/login')}
+              className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold shadow-lg shadow-purple-500/50"
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              Entrar
+            </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-12">
-        {/* Search Section */}
-        <div className="max-w-4xl mx-auto mb-16">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              O que você quer assistir hoje?
-            </h2>
-            <p className="text-lg text-purple-200">
-              Descreva o que procura e nossa IA encontrará o conteúdo perfeito
-            </p>
+      <main className="container mx-auto px-4 py-20">
+        {/* Hero Section */}
+        <div className="max-w-4xl mx-auto text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
+            <Sparkles className="w-4 h-4 text-purple-400" />
+            <span className="text-sm text-purple-300 font-medium">Busca Inteligente com IA</span>
           </div>
+          
+          <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+            Encontre o conteúdo perfeito
+            <span className="block bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+              com Inteligência Artificial
+            </span>
+          </h2>
+          
+          <p className="text-xl text-purple-200 mb-10 max-w-2xl mx-auto">
+            Descreva o que você quer assistir em linguagem natural e nossa IA encontrará filmes, séries, novelas e minisséries perfeitos para você
+          </p>
 
-          {/* Search Bar */}
-          <Card className="bg-white/5 backdrop-blur-xl border-white/10 shadow-2xl">
-            <CardContent className="p-6">
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
-                    <Input
-                      placeholder="Ex: filmes de ação com perseguições de carro..."
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      className="pl-12 h-14 bg-white/5 border-white/10 text-white placeholder:text-purple-300/50 focus:border-purple-500 focus:ring-purple-500/20"
-                    />
-                  </div>
-                  <Select value={platform} onValueChange={setPlatform}>
-                    <SelectTrigger className="w-full sm:w-48 h-14 bg-white/5 border-white/10 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas Plataformas</SelectItem>
-                      <SelectItem value="Netflix">Netflix</SelectItem>
-                      <SelectItem value="Disney+">Disney+</SelectItem>
-                      <SelectItem value="Prime Video">Prime Video</SelectItem>
-                      <SelectItem value="HBO Max">HBO Max</SelectItem>
-                      <SelectItem value="Apple TV+">Apple TV+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  onClick={handleSearch}
-                  disabled={loading || !query.trim()}
-                  className="h-14 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold shadow-lg shadow-purple-500/50 transition-all duration-300 hover:scale-[1.02]"
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Analisando...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5 mr-2" />
-                      Buscar com IA
-                    </>
-                  )}
-                </Button>
-              </div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              onClick={() => router.push('/login')}
+              size="lg"
+              className="h-14 px-8 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold shadow-lg shadow-purple-500/50 transition-all duration-300 hover:scale-105"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              Começar Agora
+            </Button>
+            <Button
+              onClick={() => router.push('/login')}
+              size="lg"
+              variant="outline"
+              className="h-14 px-8 border-white/10 text-white hover:bg-white/10"
+            >
+              Saiba Mais
+            </Button>
+          </div>
+        </div>
 
-              {/* Example Searches */}
-              {!searched && (
-                <div className="mt-6 pt-6 border-t border-white/10">
-                  <p className="text-sm text-purple-300 mb-3 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Experimente pesquisar:
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {exampleSearches.map((example, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setQuery(example)}
-                        className="px-3 py-1.5 text-sm bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-purple-200 transition-all duration-200 hover:scale-105"
-                      >
-                        {example}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
+        {/* Features */}
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-8 hover:border-purple-500/50 transition-all duration-300 hover:scale-105">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/50">
+              <Sparkles className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">Busca Inteligente</h3>
+            <p className="text-purple-300">
+              Nossa IA entende descrições naturais e encontra exatamente o que você procura, analisando títulos, atores, diretores e gêneros
+            </p>
+          </Card>
+
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-8 hover:border-purple-500/50 transition-all duration-300 hover:scale-105">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/50">
+              <Clock className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">Histórico Salvo</h3>
+            <p className="text-purple-300">
+              Todas suas pesquisas ficam salvas no seu perfil para você consultar e repetir depois quando quiser
+            </p>
+          </Card>
+
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-8 hover:border-purple-500/50 transition-all duration-300 hover:scale-105">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-6 shadow-lg shadow-purple-500/50">
+              <Film className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">Múltiplas Plataformas</h3>
+            <p className="text-purple-300">
+              Busque em Netflix, Disney+, Prime Video, HBO Max, Apple TV+ e descubra onde assistir seu conteúdo favorito
+            </p>
           </Card>
         </div>
 
-        {/* Results */}
-        {searched && (
-          <div className="max-w-7xl mx-auto">
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => (
-                  <Card key={i} className="bg-white/5 backdrop-blur-xl border-white/10 overflow-hidden">
-                    <div className="aspect-[2/3] bg-white/5 animate-pulse" />
-                    <CardContent className="p-4">
-                      <div className="h-4 bg-white/5 rounded animate-pulse mb-2" />
-                      <div className="h-3 bg-white/5 rounded animate-pulse w-2/3" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : results.length > 0 ? (
-              <>
-                <div className="mb-8 text-center">
-                  <h3 className="text-2xl font-bold text-white mb-2">
-                    Encontramos {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
-                  </h3>
-                  <p className="text-purple-300">Baseado na sua descrição</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {results.map((item) => (
-                    <Card
-                      key={item.id}
-                      className="group bg-white/5 backdrop-blur-xl border-white/10 overflow-hidden hover:border-purple-500/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20"
-                    >
-                      <div className="aspect-[2/3] relative overflow-hidden bg-gradient-to-br from-purple-900/20 to-pink-900/20">
-                        <img
-                          src={item.posterUrl}
-                          alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        {item.rating && (
-                          <Badge className="absolute top-3 right-3 bg-yellow-500/90 text-black font-bold">
-                            ⭐ {item.rating}
-                          </Badge>
-                        )}
-                      </div>
-                      <CardContent className="p-4">
-                        <h4 className="font-bold text-white mb-1 line-clamp-1">{item.title}</h4>
-                        <p className="text-sm text-purple-300 mb-2 line-clamp-2">{item.description}</p>
-                        <div className="flex items-center justify-between text-xs text-purple-400">
-                          <span className="flex items-center gap-1">
-                            {item.genre?.includes('Série') || item.title.includes('Breaking Bad') || item.title.includes('Mandalorian') ? (
-                              <Tv className="w-3 h-3" />
-                            ) : (
-                              <Film className="w-3 h-3" />
-                            )}
-                            {item.year}
-                          </span>
-                          {item.platform && (
-                            <Badge variant="outline" className="border-purple-500/50 text-purple-300">
-                              {item.platform}
-                            </Badge>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-12 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-purple-500/20 flex items-center justify-center">
-                    <Search className="w-8 h-8 text-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-2">Nenhum resultado encontrado</h3>
-                    <p className="text-purple-300">Tente descrever de outra forma ou escolha outra plataforma</p>
-                  </div>
-                </div>
-              </Card>
-            )}
+        {/* Examples */}
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h3 className="text-3xl font-bold text-white mb-3">Como funciona?</h3>
+            <p className="text-purple-300">Exemplos de buscas que você pode fazer</p>
           </div>
-        )}
 
-        {/* Features */}
-        {!searched && (
-          <div className="max-w-6xl mx-auto mt-20">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-6 hover:border-purple-500/50 transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-4">
-                  <Sparkles className="w-6 h-6 text-white" />
+          <div className="space-y-4">
+            {[
+              {
+                query: 'filmes de ficção científica sobre batalhas espaciais e armas laser',
+                icon: TrendingUp,
+              },
+              {
+                query: 'eastwood a proteger o presidente',
+                icon: TrendingUp,
+              },
+              {
+                query: 'comédia no Hawaii',
+                icon: TrendingUp,
+              },
+              {
+                query: 'série sobre crime e drogas',
+                icon: TrendingUp,
+              },
+            ].map((example, index) => (
+              <Card
+                key={index}
+                className="bg-white/5 backdrop-blur-xl border-white/10 p-6 hover:border-purple-500/50 transition-all duration-300"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                    <example.icon className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <p className="text-white font-medium">{example.query}</p>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">Busca Inteligente</h3>
-                <p className="text-purple-300 text-sm">
-                  Nossa IA entende descrições naturais e encontra exatamente o que você procura
-                </p>
               </Card>
-
-              <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-6 hover:border-purple-500/50 transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-4">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">Histórico Salvo</h3>
-                <p className="text-purple-300 text-sm">
-                  Todas suas pesquisas ficam salvas para você consultar depois
-                </p>
-              </Card>
-
-              <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-6 hover:border-purple-500/50 transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-4">
-                  <Film className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2">Múltiplas Plataformas</h3>
-                <p className="text-purple-300 text-sm">
-                  Busque em Netflix, Disney+, Prime Video e muito mais
-                </p>
-              </Card>
-            </div>
+            ))}
           </div>
-        )}
+
+          <div className="text-center mt-10">
+            <Button
+              onClick={() => router.push('/login')}
+              size="lg"
+              className="h-14 px-8 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold shadow-lg shadow-purple-500/50 transition-all duration-300 hover:scale-105"
+            >
+              <LogIn className="w-5 h-5 mr-2" />
+              Criar Conta Grátis
+            </Button>
+          </div>
+        </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 bg-black/20 backdrop-blur-xl mt-20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center text-purple-300 text-sm">
+            <p>© 2024 Descubra Agora 4U. Todos os direitos reservados.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
